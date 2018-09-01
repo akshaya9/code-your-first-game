@@ -1,0 +1,169 @@
+//https://www.udemy.com/code-your-first-game/learn/v4/content
+              //Simple tennis game using html, css and js.
+<!DOCTYPE html>
+<html>
+<canvas id = "gameCanvas" width = "800"  height = "600"> </canvas>
+
+<script>
+  var canvas;
+  var canvasContext;
+  var ballX = 50;
+  var ballSpeedX = 10;
+  var ballY = 50;
+  var ballSpeedY = 4;
+  var paddle1Y = 250;
+  var paddle2Y = 250;
+  const PADDLE_HEIGHT = 100;
+  const PADDLE_WIDTH = 10;
+  var player1score=0;
+  var player2score=0;
+  const WINNING_SCORE=3;
+  var showingWinScreen = false;
+
+  function calculateMousePos(evnt) {
+    var rect = canvas.getBoundingClientRect();
+    var root = document.documentElement;
+    var mouseX = evnt.clientX - rect.left -root.scrollLeft;
+    var mouseY = evnt.clientY - rect.top -root.scrollTop;
+    return {
+      x:mouseX,
+      y:mouseY
+    };
+
+  }
+  function handleMouseClick(evnt) {
+  	if(showingWinScreen) {
+  		player1score=0;
+  		player2score=0;
+  		showingWinScreen=false;
+  	}
+  }
+
+  window.onload = function() {
+  	canvas = document.getElementById('gameCanvas');
+  	canvasContext = canvas.getContext('2d');
+  	var framesPerSecond = 30;
+  	setInterval(callBoth, 1000/framesPerSecond);
+
+  	canvas.addEventListener('mousedown', handleMouseClick);
+  	canvas.addEventListener('mousemove',
+  		function(evnt) {
+  			var mousePos = calculateMousePos(evnt);
+  			paddle1Y = mousePos.y-(PADDLE_HEIGHT/2);
+  	});
+  }
+
+  function callBoth() {
+  		moveEverything();
+  		drawEverything();
+  }
+
+  function ballReset() {
+  	if(player1score >= WINNING_SCORE || player2score >= WINNING_SCORE){
+  		player1score=0;
+  		player2score=0;
+  		showingWinScreen = true;
+  	}
+  	ballSpeedX = -ballSpeedX;
+  	ballX = canvas.width/2;
+  	ballY = canvas.height/2;
+  }
+
+  function computermovement() {
+  	var paddle2YCenter = paddle2Y + (PADDLE_HEIGHT/2);
+  	if(paddle2YCenter < ballY) {
+  		paddle2Y+=6;
+  	}
+  	else if(paddle2YCenter > ballY+35){
+  		paddle2Y-=6
+  	}
+  }
+  //the motion of the ball is coded.
+  function moveEverything() {
+  	if(showingWinScreen) {
+  		return;
+  	}
+
+  	computermovement();
+
+  	ballX+=ballSpeedX;
+  	ballY+=ballSpeedY;
+  	if(ballX < 0) {
+  		if(ballY > paddle1Y && ballY< paddle1Y+PADDLE_HEIGHT) {
+  			ballSpeedX = -ballSpeedX;
+
+  			var deltaY = ballY-(paddle1Y+PADDLE_HEIGHT/2);
+  			ballSpeedY = deltaY *0.35;
+  		}
+  		else{
+  			player2score++;
+  			ballReset();
+  		}
+  	}
+
+  	if(ballX > canvas.width) {
+  		if(ballY > paddle2Y && ballY< paddle2Y+PADDLE_HEIGHT) {
+  			ballSpeedX = -ballSpeedX;
+
+  			var deltaY = ballY-(paddle2Y+PADDLE_HEIGHT/2);
+  			ballSpeedY = deltaY *0.35;
+  		}
+  		else{
+  			player1score++;
+  			ballReset();
+  		}
+  	}
+  	if(ballY < 0) {
+  		ballSpeedY = -ballSpeedY;
+  	}
+  	if(ballY > canvas.height) {
+  		ballSpeedY = -ballSpeedY;
+  	}
+  }
+
+  function drawNet() {
+  	for(var i=0;i<canvas.height;i+=40) {
+  		colorRect(canvas.width/2-1,i,2,20,'black');
+  	}
+  }
+
+  function drawEverything() {
+  	colorRect(0,0,canvas.width,canvas.height,'white');
+
+  	if(showingWinScreen) {
+  		canvasContext.fillStyle = "black";
+
+  		if(player1score >= WINNING_SCORE){
+  			canvasContext.fillText("Left Player won!",350,200);
+  		}
+  		else if(player2score >= WINNING_SCORE){
+  			canvasContext.fillText("Right Player won!",350,200);
+  		}
+  		canvasContext.fillText("Click to continue",350,500);
+  		return;
+  	}
+
+  	drawNet();
+
+  	colorRect(0,paddle1Y,PADDLE_WIDTH,PADDLE_HEIGHT,'black');
+
+  	colorRect(canvas.width-PADDLE_WIDTH,paddle2Y,PADDLE_WIDTH,PADDLE_HEIGHT,'black');
+  	//Ball.
+  	colorcircle(ballX,ballY,10,'black');
+  	canvasContext.fillText(player1score,100,100);
+  	canvasContext.fillText(player2score,canvas.width-100,100);
+  }
+
+  function colorcircle(centerX,centerY,radius, drawColor) {
+  		canvasContext.fillStyle = drawColor;
+  		canvasContext.beginPath();
+  		canvasContext.arc(centerX, centerY, radius, 0,Math.PI*2, true);
+  		canvasContext.fill();
+  }
+
+  function colorRect(leftX,topY, width, height, drawColor) {
+  		canvasContext.fillStyle = drawColor;
+  		canvasContext.fillRect(leftX,topY,width,height);
+  }
+  </script>
+  </html>
